@@ -193,10 +193,10 @@ def text_file_writer(issues_file: str = "mathonco-newsletter/issues_no_duplicate
 
 def main():
     # 1. Remove duplicates 
-    remove_duplicates("mathonco-newsletter/issues.json", "mathonco-newsletter/issues_no_duplicates.json")
+    remove_duplicates("out/issues.json", "out/issues_no_duplicates.json")
 
     # # 2. Write bibtex
-    bibtex_writer("mathonco-newsletter/issues_no_duplicates.json")
+    bibtex_writer("out/issues_no_duplicates.json")
 
     # # 3. DOI file
     # text_file_writer()
