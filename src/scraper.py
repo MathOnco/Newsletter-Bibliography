@@ -10,12 +10,17 @@ from difflib import SequenceMatcher
 import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-from crossref.restful import Works
+from crossref.restful import Works, Etiquette
 from habanero import cn
 
 
 # config logger
 logging.basicConfig(level=logging.INFO)
+
+# get etiquette for CrossRef
+with open("config.json", "r") as infile:
+    config = json.load(infile)
+my_etiquette = Etiquette('Newsletter Bibliography Scraper', '1.0', '...', config["email"])
 
 
 def cli():
@@ -161,11 +166,11 @@ def get_doi(title: str, crossref: Works = None) -> str:
     logging.info(f"Retriving doi for paper: {title}")
 
     # Init CrossRef if necessary
-    works = Works() if crossref is None else crossref
+    works = Works(etiquette=my_etiquette) if crossref is None else crossref
 
     # Iterate on the first N results
     search_limit = 100
-    for i, element in enumerate(works.query(title).select('title', 'DOI')):
+    for i, element in enumerate(works.query(bibliographic=title).select('title', 'DOI')):
         # format title
         try:
             formatted_element_title = format_title(element["title"][0])
