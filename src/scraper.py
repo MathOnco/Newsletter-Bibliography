@@ -111,16 +111,29 @@ def get_publications_from_issue(soup: BeautifulSoup, issue_number: int) -> dict:
         # All the banner are under the tag 'source' and the link to the banner image is the field 'srcset'.
         # Thus, knowing the name of the image of the publications section and of the preprint sections,
         # we can identify the papers contained in between.
+        # Sometimes there are no preprints. Thus, we iterate over the other sections in order to find the follwoing one.
         publications_banner_name = "fabab95d-eefe-45a0-b47e-77fc63cde5de_1024x250.png"
         preprints_banner_name = "58c80455-f0b6-43db-830a-0f73b96ead1e_1024x250.png"
+        in_the_news_banner_name = "2F104440ac-3cbf-4dd2-bf8b-a4f8b11035f5_1024x250.png"
+        featured_artwork_banner_name = "2F0feba771-e36d-4595-9841-f9ee8872be92_1024x250.jpeg"
+        resources_banner_name = "2F1717140c-562f-4f59-8459-4c2c1a1caa48_1024x250.png"
         section_publications = None
         following_section = None
         for image in soup.find_all("source"):
             srcset = image.get('srcset')
+            # get publication section
             if publications_banner_name in srcset:
                 section_publications = image
+            # get following section
             if preprints_banner_name in srcset:
                 following_section = image
+            elif in_the_news_banner_name in srcset:
+                following_section = image
+            elif featured_artwork_banner_name in srcset:
+                following_section = image
+            elif resources_banner_name in srcset:
+                following_section = image
+            # when you found both, break
             if (section_publications is not None) and (following_section is not None):
                 break
     
@@ -235,10 +248,11 @@ def main():
         response = requests.get(input_url)
         if response.raise_for_status() is None:
             mathonco_issue_html = response.text
+            # create a list of a single element
+            mathonco_html_list = [mathonco_issue_html]
         else:
             response.raise_for_status()
-        # create a list of a single element
-        mathonco_html_list = [mathonco_issue_html]
+            return 1
     elif args.directory is not None:
         # if the input is a directory, use athlib to create a generator of html files
         input_directory = Path(args.directory)
@@ -246,6 +260,9 @@ def main():
     elif args.file is not None:
         # if the input is a single html file, convert it to path
         mathonco_html_list = [Path(args.f)]
+    else:
+        logging.error("User input not recognized.")
+        return 1
 
     # get the issues already parsed
     if out_json_file.exists():
@@ -257,7 +274,7 @@ def main():
         collected_issue_numbers = []
 
     # set up pbar
-    pbar_file = open("../pbar.o", "w")
+    pbar_file = open("./pbar.o", "w")
 
     # iterate on the issues
     for issue in tqdm(mathonco_html_list, file=pbar_file):
