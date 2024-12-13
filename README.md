@@ -1,6 +1,18 @@
 # MathOnco References 
 > A collection of the references collected on [This Week in Mathematical Oncology](https://thisweekmathonco.substack.com/) 
 
+## Setup
+Add a config file:
+```bash
+touch config.json
+```
+Add your email to the config file:
+```json
+{
+    "email": "youremail@example.xy"
+}
+```
+
 ## Code
 - `src/scraper.py` -> Scrape the papers from MathOnco issues. Try running 
     ```python
