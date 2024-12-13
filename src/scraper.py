@@ -237,6 +237,7 @@ def enrich_publications(issue_dict: dict, issue_number: int, citation_format: st
 def main():
     # set some macros
     out_json_file = Path("out/issues.json")
+    out_json_file.parent.mkdir(parents=True, exist_ok=True)
 
     # get cli
     args = cli()
