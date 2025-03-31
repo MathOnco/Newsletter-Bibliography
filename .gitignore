@@ -8,3 +8,4 @@ in/
 .idea/
 .vscode/
 config.json
+.python-version
