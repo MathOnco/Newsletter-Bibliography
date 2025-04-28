@@ -9,3 +9,4 @@ in/
 .vscode/
 config.json
 .python-version
+.DS_Store
