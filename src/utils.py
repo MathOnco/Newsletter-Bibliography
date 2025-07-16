@@ -97,5 +97,6 @@ def count_n_papers_per_year(single_years_folder = Path("res/single_years")):
 
 
 if __name__ == "__main__":
+    split_bib_per_issue()
     split_single_bib_files_per_year()
     count_n_papers_per_year()
