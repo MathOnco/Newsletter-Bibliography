@@ -16,7 +16,7 @@ jobs:
       - name: Run auto-update script
         run: |
           pipenv install -r requirements.txt
-          pipenv run python automatic_update.py
+          pipenv run python3 automatic_update.py
 
       - name: Commit changes
         run: |
