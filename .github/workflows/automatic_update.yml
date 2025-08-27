@@ -1,0 +1,32 @@
+name: mathonco-automatic-update
+run-name: Updating MathOnco Bibliography (Scheduled every Friday)
+on: 
+  schedule:
+    - cron: '0 0 * * 5'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run auto-update script
+        run: |
+          pipenv install -r requirements.txt
+          pipenv run python automatic_update.py
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "test@github.com"
+          git config --local user.name "GitHub Action test"
+          git add res/*
+          git commit -m "Auto update" 
+
+      - name: Push changes 
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          force: true
