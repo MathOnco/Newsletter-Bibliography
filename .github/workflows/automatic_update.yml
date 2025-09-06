@@ -2,7 +2,7 @@ name: mathonco-automatic-update
 run-name: Updating MathOnco Bibliography (Scheduled every Friday)
 on: 
   schedule:
-    - cron: '0 0 * * 5'
+    - cron: '*/10 * * * *'
 
 jobs:
   build:
@@ -13,10 +13,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+          cache: 'pipenv'
+      
+      - name: Install pipenv
+        run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
+
+      - name: Install dependencies
+        run: pipenv install --deploy --system
+
       - name: Run auto-update script
-        run: |
-          pip3 install -r requirements.txt
-          python3 automatic_update.py
+        run: pipenv run python3 automatic_update.py
 
       - name: Commit changes
         run: |

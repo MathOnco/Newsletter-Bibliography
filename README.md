@@ -36,3 +36,5 @@ Add your email to the config file:
 - `src/utils.py` -> functions to split and reorganize the references
 
 - `requirements.txt` -> Dependencies for the code
+
+- `automatic_update.py` -> Script used in the workflow to automatically update the bib file

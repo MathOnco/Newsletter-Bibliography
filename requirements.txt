@@ -1,9 +1,0 @@
-beautifulsoup4==4.13.4
-crossref==0.1.2
-habanero==2.2.0
-numpy==2.2.5
-pandas==2.2.3
-pybtex==0.24.0
-Requests==2.32.3
-tqdm==4.67.1
-Unidecode==1.4.0
