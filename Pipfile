@@ -4,17 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-beautifulsoup4 = "==4.13.5"
-crossref = "==0.1.2"
-habanero = "==1.2.3"
-numpy = "==1.24.4"
-pandas = "==2.0.3"
-pybtex = "==0.24.0"
-requests = "==2.31"
-tqdm = "==4.66.1"
-unidecode = "==1.3.8"
+beautifulsoup4 = "*"
+crossrefapi = "*"
+habanero = "*"
+numpy = "*"
+pandas = "*"
+pybtex = "*"
+requests = "*"
+tqdm = "*"
+unidecode = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.11"
+python_version = "3.13"

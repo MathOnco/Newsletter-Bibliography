@@ -16,14 +16,14 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.13'
           cache: 'pipenv'
       
       - name: Install pipenv
         run: curl https://raw.githubusercontent.com/pypa/pipenv/master/get-pipenv.py | python
 
       - name: Install dependencies
-        run: pipenv install --deploy --system
+        run: pipenv install --python 3.13
 
       - name: Run auto-update script
         run: pipenv run python3 automatic_update.py
