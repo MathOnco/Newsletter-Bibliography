@@ -18,8 +18,9 @@ from habanero import cn
 logging.basicConfig(level=logging.INFO)
 
 # get etiquette for CrossRef
-with open("config.json", "r") as infile:
-    config = json.load(infile)
+config = {
+    "email": "franco.pradelli94@gmail.com"
+}
 my_etiquette = Etiquette('Newsletter Bibliography Scraper', '1.0', '...', config["email"])
 
 
