@@ -2,7 +2,7 @@ name: mathonco-automatic-update
 run-name: Updating MathOnco Bibliography (Scheduled every Friday)
 on: 
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '0 0 * * 5'
 
 jobs:
   build:
