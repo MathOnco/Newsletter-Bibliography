@@ -19,7 +19,7 @@ while True:
     ### --- Check if new issue exists --- ###
     new_issue_number = latest_issue_number + 1
     new_issue_url = f"https://thisweekmathonco.substack.com/p/this-week-in-mathonco-{new_issue_number}"
-    response = requests.get(new_issue_url)
+    response = requests.get(new_issue_url, headers={'User-Agent': 'Mozilla/5.0'})
     # if status code is 404, exit the loop. Else, raise for status and go on
     if response.status_code == 404:
         print(f"No new issue found. Latest issue is {new_issue_number - 1}.")
