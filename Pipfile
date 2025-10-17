@@ -13,6 +13,7 @@ pybtex = "*"
 requests = "*"
 tqdm = "*"
 unidecode = "*"
+fake-useragent = "*"
 
 [dev-packages]
 

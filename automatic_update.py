@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pybtex.scanner
+from fake_useragent import UserAgent
 from src.scraper import get_publications_from_issue, enrich_publications
 from pybtex.database import BibliographyData
 from pybtex.database import parse_string as bibtex_parse_string
@@ -19,10 +20,7 @@ while True:
     ### --- Check if new issue exists --- ###
     new_issue_number = latest_issue_number + 1
     new_issue_url = f"https://thisweekmathonco.substack.com/p/this-week-in-mathonco-{new_issue_number}"
-    response = requests.get(new_issue_url, 
-                            headers={'User-Agent': 
-                                     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"}
-                            )
+    response = requests.get(new_issue_url, headers={'User-Agent': UserAgent().random})
     # if status code is 404, exit the loop. Else, raise for status and go on
     if response.status_code == 404:
         print(f"No new issue found. Latest issue is {new_issue_number - 1}.")
