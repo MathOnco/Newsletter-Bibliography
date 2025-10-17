@@ -42,6 +42,10 @@ while True:
         # get bibtex
         pub_bib = pub.get("bibtex")
 
+        # if None, skip
+        if pub_bib is None:
+            continue
+
         # parse
         try:
             parsed_bibtex = bibtex_parse_string(pub_bib, "bibtex")
