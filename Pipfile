@@ -13,7 +13,7 @@ pybtex = "*"
 requests = "*"
 tqdm = "*"
 unidecode = "*"
-fake-useragent = "*"
+feedparser = "*"
 
 [dev-packages]
 

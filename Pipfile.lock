@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2d57f7b94b11226cffde4c15aab9b62f11e6f8a0acad01f3413542b2ddfc74e5"
+            "sha256": "b5d79e1a88d7065bae0ba1380a2362687f59c571a684119f87f3f2f4fb5c92ed"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -193,14 +193,14 @@
             "markers": "python_version >= '3.8'",
             "version": "==2.2.1"
         },
-        "fake-useragent": {
+        "feedparser": {
             "hashes": [
-                "sha256:4e6ab6571e40cc086d788523cf9e018f618d07f9050f822ff409a4dfe17c16b2",
-                "sha256:67f35ca4d847b0d298187443aaf020413746e56acd985a611908c73dba2daa24"
+                "sha256:64f76ce90ae3e8ef5d1ede0f8d3b50ce26bcce71dd8ae5e82b1cd2d4a5f94228",
+                "sha256:6bbff10f5a52662c00a2e3f86a38928c37c48f77b3c511aedcd51de933549324"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.9'",
-            "version": "==2.2.0"
+            "markers": "python_version >= '3.6'",
+            "version": "==6.0.12"
         },
         "h11": {
             "hashes": [
@@ -269,11 +269,11 @@
         },
         "matplotlib-inline": {
             "hashes": [
-                "sha256:8423b23ec666be3d16e16b60bdd8ac4e86e840ebd1dd11a30b9f117f2fa0ab90",
-                "sha256:df192d39a4ff8f21b1895d72e6a13f5fcc5099f00fa84384e0ea28c2cc0653ca"
+                "sha256:d56ce5156ba6085e00a9d54fead6ed29a9c47e215cd1bba2e976ef39f5710a76",
+                "sha256:e1ee949c340d771fc39e241ea75683deb94762c8fa5f2927ec57c83c4dffa9fe"
             ],
-            "markers": "python_version >= '3.8'",
-            "version": "==0.1.7"
+            "markers": "python_version >= '3.9'",
+            "version": "==0.2.1"
         },
         "numpy": {
             "hashes": [
@@ -583,6 +583,12 @@
             "index": "pypi",
             "markers": "python_version >= '3.9'",
             "version": "==2.32.5"
+        },
+        "sgmllib3k": {
+            "hashes": [
+                "sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9"
+            ],
+            "version": "==1.0.0"
         },
         "six": {
             "hashes": [

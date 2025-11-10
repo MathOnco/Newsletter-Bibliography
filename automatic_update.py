@@ -1,37 +1,33 @@
-# This file automatically updates the bibliography thanks to GitHub Actions
+# This file automatically updates the bibliography with GitHub Actions
 import requests
+import feedparser
 from bs4 import BeautifulSoup
 import pybtex.scanner
-from fake_useragent import UserAgent
 from src.scraper import get_publications_from_issue, enrich_publications
 from pybtex.database import BibliographyData
 from pybtex.database import parse_string as bibtex_parse_string
 from unidecode import unidecode
 
+### --- Initialize Feed --- ###
+mathonco_feed = feedparser.parse("https://thisweekmathonco.substack.com/feed")
 
-### --- Read Latest Issue Number --- ###
+### --- Read Latest Saved Issue Number --- ###
 with open("res/MathOncoBibliography.bib", "r") as f:
     latest_issue = f.readline().strip()
 latest_issue_number = int(latest_issue.split(" ")[-1])
 
 ### --- Iterate on issues until you find the last --- ###
-
-while True:
-    ### --- Check if new issue exists --- ###
-    new_issue_number = latest_issue_number + 1
-    new_issue_url = f"https://thisweekmathonco.substack.com/p/this-week-in-mathonco-{new_issue_number}"
-    response = requests.get(new_issue_url, headers={'User-Agent': UserAgent().random})
-    # if status code is 404, exit the loop. Else, raise for status and go on
-    if response.status_code == 404:
-        print(f"No new issue found. Latest issue is {new_issue_number - 1}.")
+for issue in mathonco_feed.entries:
+    ### --- Check if new issue is already saved --- ###
+    new_issue_number = issue.title.split(" ")[-1]
+    new_issue_number = int(new_issue_number)
+    if new_issue_number <= latest_issue_number:
+        print(f"No new issue found. Latest issue is {latest_issue_number}.")
         break
-    else:
-        response.raise_for_status()
-    latest_issue_number = new_issue_number
     print(f"New issue found: {new_issue_number}")
 
     ### --- If new issue exist, extract publications --- ###
-    mathonco_issue_html = response.text                             # get html
+    mathonco_issue_html = issue.content[0].value  # get html
     html_soup = BeautifulSoup(mathonco_issue_html, 'html.parser')   # parse html
     new_issue_dict = get_publications_from_issue(html_soup, new_issue_number)
     new_issue_dict = enrich_publications(new_issue_dict, new_issue_number)
