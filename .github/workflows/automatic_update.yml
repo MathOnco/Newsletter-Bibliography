@@ -32,8 +32,12 @@ jobs:
         run: |
           git config --local user.email "test@github.com"
           git config --local user.name "GitHub Action test"
-          git add res/*
-          git commit -m "Auto update" 
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto update"
+          else
+            echo "No changes to commit."
+          fi
 
       - name: Push changes 
         uses: ad-m/github-push-action@master
