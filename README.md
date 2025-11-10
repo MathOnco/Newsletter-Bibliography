@@ -3,9 +3,9 @@
 
 ## Access the collection
 Everything is in the `res` folder! 
-- `res/MathOncoBibliography.bib` -> All MathOnco papers.
-- `res/single_issues/*.bib` -> MathOnco papers divided per issue
-- `res/single_years/*.bib` -> MathOnco papers divided per year 
+- `res/MathOncoBibliography.bib` -> All TWiMO papers.
+- `res/single_issues/*.bib` -> TWiMO papers divided per issue
+- `res/single_years/*.bib` -> TWiMO papers divided per year 
 
 ## Follow the blog
 Stay updated on conferences, jobs, papers and preprints in Mathematical Oncology following [TWiMO](https://thisweekmathonco.substack.com/)
