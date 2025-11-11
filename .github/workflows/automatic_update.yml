@@ -1,8 +1,8 @@
 name: mathonco-automatic-update
-run-name: Updating MathOnco Bibliography (Scheduled every Friday)
+run-name: Updating TWiMO Bibliography (Every Thursday at 18:00)
 on: 
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '0 18 * * 4'
 
 jobs:
   build:
