@@ -5,7 +5,7 @@ from collections import Counter
 import numpy as np
 import pybtex.scanner
 from tqdm import tqdm
-from pybtex.database import BibliographyData
+from pybtex.database import BibliographyData, parse_file
 from pybtex.database import parse_string as bibtex_parse_string
 from unidecode import unidecode
 
@@ -189,6 +189,35 @@ def text_file_writer(issues_file: str = "mathonco-newsletter/issues_no_duplicate
         out_file.write(column_file_txt)
     with open(column_file_annotated, "w") as out_file:
         out_file.write(column_file_annotated_txt)
+
+
+def convert_issue_bib_to_json(issue_number: int):
+    # Input / output files
+    bib_file = f"res/single_issues/issue_{issue_number}.bib"
+    out_json_folder = Path("out/single_issues_json")
+    out_json_folder.mkdir(parents=True, exist_ok=True)
+    json_file = out_json_folder / f"issue_{issue_number}.json"
+
+    # Parse BibTeX
+    try:
+        bib_data = parse_file(bib_file)
+    except Exception as e:
+        print(f"Error parsing {bib_file}: {e}")
+        return
+
+    records = []
+    for key, entry in bib_data.entries.items():
+        fields = entry.fields
+        records.append({
+            "title": fields.get("title"),
+            "doi": fields.get("doi") or fields.get("DOI")
+        })
+
+    # Write JSON
+    with open(json_file, "w") as f:
+        json.dump(records, f, indent=2)
+
+    print(f"Saved {len(records)} records to {json_file}")
 
 
 def main():

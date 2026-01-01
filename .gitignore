@@ -9,3 +9,4 @@ in/
 config.json
 .python-version
 .DS_Store
+misc/
