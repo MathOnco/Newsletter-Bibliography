@@ -16,19 +16,32 @@ with open("res/MathOncoBibliography.bib", "r") as f:
     latest_issue = f.readline().strip()
 latest_issue_number = int(latest_issue.split(" ")[-1])
 
-### --- Iterate on issues until you find the last --- ###
+### --- Find new issues, if any --- ###
+new_issues = []
 for issue in mathonco_feed.entries:
-    ### --- Check if new issue is already saved --- ###
+    issue_number = issue.title.split(" ")[-1]
+    issue_number = int(issue_number)
+    if issue_number > latest_issue_number:
+        new_issues.append(issue)
+        print(f"New issue found: {issue_number}")
+
+# Inform the user if no new issue is found
+if len(new_issues) == 0:
+    print(f"No new issue found. Latest issue is {latest_issue_number}.")
+
+# reverse to start from the oldest
+new_issues = sorted(new_issues, key=lambda x: int(x.title.split(" ")[-1]))
+
+### --- Iterate on issues until you find the last --- ###
+for issue in new_issues:
+    ### --- Get issue number --- ###
     new_issue_number = issue.title.split(" ")[-1]
     new_issue_number = int(new_issue_number)
-    if new_issue_number <= latest_issue_number:
-        print(f"No new issue found. Latest issue is {latest_issue_number}.")
-        break
-    print(f"New issue found: {new_issue_number}")
+    print(f"Processing issue {new_issue_number}...")
 
     ### --- If new issue exist, extract publications --- ###
     mathonco_issue_html = issue.content[0].value  # get html
-    html_soup = BeautifulSoup(mathonco_issue_html, 'html.parser')   # parse html
+    html_soup = BeautifulSoup(mathonco_issue_html, 'html.parser')
     new_issue_dict = get_publications_from_issue(html_soup, new_issue_number)
     new_issue_dict = enrich_publications(new_issue_dict, new_issue_number)
 

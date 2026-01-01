@@ -106,7 +106,7 @@ def get_publications_from_issue(soup: BeautifulSoup, issue_number: int) -> dict:
             following_section = None
         else:
             following_section = section_publications.find_next('h3')
-    else:
+    elif issue_number >= 141 and issue_number < 351:
         # visually inspecting the document, I noticed that the different sections are divided by a banner.
         # There is a banner for publications, a banner for preprints, etc.
         # All the banner are under the tag 'source' and the link to the banner image is the field 'srcset'.
@@ -121,7 +121,40 @@ def get_publications_from_issue(soup: BeautifulSoup, issue_number: int) -> dict:
         section_publications = None
         following_section = None
         for image in soup.find_all("source"):
+            # get id of the image
             srcset = image.get('srcset')
+            # get publication section
+            if publications_banner_name in srcset:
+                section_publications = image
+            # get following section
+            if preprints_banner_name in srcset:
+                following_section = image
+            elif in_the_news_banner_name in srcset:
+                following_section = image
+            elif featured_artwork_banner_name in srcset:
+                following_section = image
+            elif resources_banner_name in srcset:
+                following_section = image
+            # when you found both, break
+            if (section_publications is not None) and (following_section is not None):
+                break
+    else:
+        # visually inspecting the document, I noticed that the different sections are divided by a banner.
+        # There is a banner for publications, a banner for preprints, etc.
+        # All the banner are under the tag 'source' and the link to the banner image is the field 'srcset'.
+        # Thus, knowing the name of the image of the publications section and of the preprint sections,
+        # we can identify the papers contained in between.
+        # Sometimes there are no preprints. Thus, we iterate over the other sections in order to find the follwoing one.
+        publications_banner_name = "fabab95d-eefe-45a0-b47e-77fc63cde5de_1024x250.png"
+        preprints_banner_name = "58c80455-f0b6-43db-830a-0f73b96ead1e_1024x250.png"
+        in_the_news_banner_name = "2F104440ac-3cbf-4dd2-bf8b-a4f8b11035f5_1024x250.png"
+        featured_artwork_banner_name = "2F0feba771-e36d-4595-9841-f9ee8872be92_1024x250.jpeg"
+        resources_banner_name = "2F1717140c-562f-4f59-8459-4c2c1a1caa48_1024x250.png"
+        section_publications = None
+        following_section = None
+        for image in soup.find_all("img"):
+            # get id of the image
+            srcset = image.get('src')
             # get publication section
             if publications_banner_name in srcset:
                 section_publications = image
