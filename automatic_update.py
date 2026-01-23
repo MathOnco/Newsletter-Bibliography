@@ -1,4 +1,5 @@
 # This file automatically updates the bibliography with GitHub Actions
+import logging
 import requests
 import feedparser
 from bs4 import BeautifulSoup
@@ -8,8 +9,15 @@ from pybtex.database import BibliographyData
 from pybtex.database import parse_string as bibtex_parse_string
 from unidecode import unidecode
 
+logging.basicConfig(level=logging.INFO)
+
 ### --- Initialize Feed --- ###
 mathonco_feed = feedparser.parse("https://thisweekmathonco.substack.com/feed")
+logging.info(f"bozo: {mathonco_feed.bozo}")
+logging.info(f"status: {getattr(mathonco_feed, 'status', None)}")
+logging.info(f"entries: {len(getattr(mathonco_feed, 'entries', []))}")
+logging.info(f"version: {getattr(mathonco_feed, 'version', None)}")
+logging.info(f"bozo_exception: {getattr(mathonco_feed, 'bozo_exception', None)}")
 
 ### --- Read Latest Saved Issue Number --- ###
 with open("res/MathOncoBibliography.bib", "r") as f:
@@ -23,11 +31,11 @@ for issue in mathonco_feed.entries:
     issue_number = int(issue_number)
     if issue_number > latest_issue_number:
         new_issues.append(issue)
-        print(f"New issue found: {issue_number}")
+        logging.info(f"New issue found: {issue_number}")
 
 # Inform the user if no new issue is found
 if len(new_issues) == 0:
-    print(f"No new issue found. Latest issue is {latest_issue_number}.")
+    logging.info(f"No new issue found. Latest issue is {latest_issue_number}.")
 
 # reverse to start from the oldest
 new_issues = sorted(new_issues, key=lambda x: int(x.title.split(" ")[-1]))
@@ -37,7 +45,7 @@ for issue in new_issues:
     ### --- Get issue number --- ###
     new_issue_number = issue.title.split(" ")[-1]
     new_issue_number = int(new_issue_number)
-    print(f"Processing issue {new_issue_number}...")
+    logging.info(f"Processing issue {new_issue_number}...")
 
     ### --- If new issue exist, extract publications --- ###
     mathonco_issue_html = issue.content[0].value  # get html
@@ -59,7 +67,7 @@ for issue in new_issues:
         try:
             parsed_bibtex = bibtex_parse_string(pub_bib, "bibtex")
         except pybtex.scanner.TokenRequired:
-            print(f"Something wrong with the entry: {pub_bib}")
+            logging.error(f"Something wrong with the entry: {pub_bib}")
             raise pybtex.scanner.TokenRequired
         # get bibtex label and entry
         bib_label, bib_entry = list(parsed_bibtex.entries.items())[0]
