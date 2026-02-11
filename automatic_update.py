@@ -8,6 +8,7 @@ from src.scraper import get_publications_from_issue, enrich_publications
 from pybtex.database import BibliographyData
 from pybtex.database import parse_string as bibtex_parse_string
 from unidecode import unidecode
+from src.postprocessing import clean_duplicates
 
 logging.basicConfig(level=logging.INFO)
 
@@ -114,3 +115,7 @@ for issue in new_issues:
     with open("res/MathOncoBibliography.bib", "w") as f:
         f.write(formatted_bib)
         f.write(big_bib)
+
+# clean duplicates
+clean_duplicates()
+
