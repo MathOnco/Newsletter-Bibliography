@@ -1,5 +1,7 @@
+import re
 import json
 import logging
+from html import unescape
 from pathlib import Path
 from collections import Counter
 import numpy as np
@@ -8,9 +10,10 @@ from tqdm import tqdm
 from pybtex.database import BibliographyData, parse_file
 from pybtex.database import parse_string as bibtex_parse_string
 from unidecode import unidecode
+import requests
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 
 def print_info(issues_file: str):
@@ -220,15 +223,225 @@ def convert_issue_bib_to_json(issue_number: int):
     print(f"Saved {len(records)} records to {json_file}")
 
 
+def _inverted_index_to_abstract(inv_index: dict) -> str:
+    """
+    Get abstract form OpenAlex Crossref API response, which is given as an inverted index (position → word).
+    """
+    if not inv_index:
+        return None
+
+    # Build position → word mapping
+    position_word = {}
+    for word, positions in inv_index.items():
+        for pos in positions:
+            position_word[pos] = word
+
+    # Reconstruct in order
+    return " ".join(position_word[i] for i in sorted(position_word))
+
+
+def _get_crossref_abstract(doi: str, timeout: int = 12) -> str:
+    """
+    Retrieve abstract from Crossref for a DOI.
+    """
+    if doi is None:
+        return None
+
+    doi = doi.strip()
+    if not doi:
+        return None
+
+    # Use OpenAlex API to get the abstract
+    url = f"https://api.openalex.org/works/https://doi.org/{doi}"
+
+    try:
+        r = requests.get(url, timeout=30)
+        r.raise_for_status()
+        work = r.json()
+    except requests.HTTPError as e:
+        logging.warning(f"HTTP error {e} for DOI: {doi}")
+        return None
+    except requests.RequestException:
+        logging.warning(f"Failed to retrieve Crossref data for DOI: {doi}")
+        return None
+    except ValueError:
+        return None
+
+    return _inverted_index_to_abstract(work.get("abstract_inverted_index"))
+
+
+def _iter_issue_entries(bib_text: str):
+    """
+    Yield (issue_number, raw_entry) for each BibTeX entry in file order.
+    """
+    issue_pattern = re.compile(r"//MathOnco Issue\s+(\d+)\s*\n")
+    issue_matches = list(issue_pattern.finditer(bib_text))
+
+    for i, issue_match in enumerate(issue_matches):
+        issue_number = int(issue_match.group(1))
+        start = issue_match.end()
+        end = issue_matches[i + 1].start() if i + 1 < len(issue_matches) else len(bib_text)
+        issue_block = bib_text[start:end]
+
+        for entry_match in re.finditer(r"@\w+\s*{", issue_block):
+            entry_start = entry_match.start()
+            brace_level = 0
+            entry_end = None
+            for pos, char in enumerate(issue_block[entry_start:], start=entry_start):
+                if char == "{":
+                    brace_level += 1
+                elif char == "}":
+                    brace_level -= 1
+                    if brace_level == 0:
+                        entry_end = pos + 1
+                        break
+
+            if entry_end is None:
+                logging.warning(f"Could not parse one entry in issue {issue_number}.")
+                continue
+
+            yield issue_number, issue_block[entry_start:entry_end]
+
+
+def clean_duplicates(
+    bib_file: str = "res/MathOncoBibliography.bib",
+    output_file: str = "res/MathOncoBibliography.bib",
+) -> dict:
+    """
+    Detect and remove duplicates in a MathOnco BibTeX file.
+
+    Duplicate detection:
+    - primary key: DOI (case-insensitive, normalized)
+    - fallback: title (whitespace-normalized, lowercased) when DOI is missing
+    """
+    with open(Path(bib_file), "r") as f:
+        bib_text = f.read()
+
+    seen = set()
+    unique_entries_by_issue = {}
+    total_entries = 0
+    duplicates_removed = 0
+
+    for issue_number, raw_entry in _iter_issue_entries(bib_text):
+        total_entries += 1
+        unique_entries_by_issue.setdefault(issue_number, [])
+
+        duplicate_key = None
+        try:
+            parsed_entry = bibtex_parse_string(raw_entry, "bibtex")
+            _, entry = list(parsed_entry.entries.items())[0]
+            fields = dict(entry.fields)
+            doi = (fields.get("doi") or fields.get("DOI") or "").strip()
+            if doi:
+                doi = doi.replace("https://doi.org/", "").replace("http://doi.org/", "").replace("doi.org/", "")
+                duplicate_key = ("doi", doi.lower())
+            else:
+                title = re.sub(r"\s+", " ", (fields.get("title") or "")).strip().lower()
+                if title:
+                    duplicate_key = ("title", title)
+        except Exception:
+            logging.warning(f"Could not parse one entry in issue {issue_number} during duplicate cleaning.")
+
+        if duplicate_key is not None and duplicate_key in seen:
+            duplicates_removed += 1
+            continue
+
+        if duplicate_key is not None:
+            seen.add(duplicate_key)
+        unique_entries_by_issue[issue_number].append(raw_entry.strip())
+
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        for issue_number in sorted(unique_entries_by_issue.keys(), reverse=True):
+            f.write(f"//MathOnco Issue {issue_number}\n")
+            entries = unique_entries_by_issue[issue_number]
+            if entries:
+                f.write("\n\n".join(entries))
+                f.write("\n\n")
+
+    summary = {
+        "total_entries": total_entries,
+        "duplicates_removed": duplicates_removed,
+        "remaining_entries": total_entries - duplicates_removed,
+        "output_file": str(output_path),
+    }
+    logging.info(
+        f"Duplicate cleanup completed: removed {duplicates_removed}/{total_entries}. "
+        f"Saved to {output_path}"
+    )
+    return summary
+
+
+def convert_mathonco_bib_to_json(
+    bib_file: str = "res/MathOncoBibliography.bib",
+    output_file: str = "out/MathOncoBibliography.json",
+    fetch_abstracts: bool = True,
+) -> list[dict]:
+    """
+    Convert MathOnco bibliography to a JSON list with one record per publication.
+
+    Each record contains:
+    - all parsed BibTeX information (entry key, type, fields, persons)
+    - the MathOnco issue number (`mathonco_issue`)
+    - the abstract from Crossref when DOI is available
+    """
+    bib_path = Path(bib_file)
+    with open(bib_path, "r") as f:
+        bib_text = f.read()
+
+    publications = []
+    entries = list(_iter_issue_entries(bib_text))
+    for issue_number, raw_entry in tqdm(entries, total=len(entries), desc="Processing issues"):
+        try:
+            parsed_entry = bibtex_parse_string(raw_entry, "bibtex")
+            key, entry = list(parsed_entry.entries.items())[0]
+        except Exception:
+            logging.warning(f"Could not parse one entry in issue {issue_number}.")
+            continue
+
+        # Preserve all people roles (author/editor/etc.) as strings.
+        persons_dict = {
+            role: [str(person) for person in person_list]
+            for role, person_list in entry.persons.items()
+        }
+
+        fields = dict(entry.fields)
+        doi = fields.get("doi") or fields.get("DOI")
+        abstract = _get_crossref_abstract(doi) if fetch_abstracts else None
+
+        publications.append({
+            "mathonco_issue": issue_number,
+            "entry_key": key,
+            "entry_type": entry.type,
+            "fields": fields,
+            "persons": persons_dict,
+            "raw_bibtex": raw_entry,
+            "abstract": abstract,
+        })
+
+    output_path = Path(output_file)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(publications, f, indent=2)
+
+    logging.info(f"Saved {len(publications)} records to {output_path}")
+    return publications
+
+
+
+
+
 def main():
-    # 1. Remove duplicates 
-    remove_duplicates("out/issues.json", "out/issues_no_duplicates.json")
+    # # 1. Remove duplicates 
+    # remove_duplicates("out/issues.json", "out/issues_no_duplicates.json")
 
-    # # 2. Write bibtex
-    bibtex_writer("out/issues_no_duplicates.json")
+    # # # 2. Write bibtex
+    # bibtex_writer("out/issues_no_duplicates.json")
 
-    # # 3. DOI file
-    # text_file_writer()
+    # # # 3. DOI file
+    # # text_file_writer()
+    convert_mathonco_bib_to_json()
 
 
 if __name__ == "__main__":
