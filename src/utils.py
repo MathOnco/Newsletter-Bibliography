@@ -1,8 +1,27 @@
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from pybtex.database import parse_string as bibtex_parse_string
 
-def split_bib_per_issue(bib_file_txt = Path("res/MathOncoBibliograpy.bib")):
+
+MATHONCO_BIB_FILE = Path("res/MathOncoBibliography.bib")
+
+
+def get_parsed_bibliography(bib_file_txt = MATHONCO_BIB_FILE):
+    """
+    Load the bibliography and parse it using pybtex.
+    """
+    # load bibliography
+    with open(bib_file_txt, "r") as f:
+        bib_content = f.read()
+
+    # load content
+    bib_content_parsed = bibtex_parse_string(bib_content, "bibtex")
+
+    return bib_content_parsed
+
+
+def split_bib_per_issue(bib_file_txt = Path("res/MathOncoBibliography.bib")):
     """
     Split a bib file into separate issues
     """
@@ -31,7 +50,7 @@ def split_bib_per_issue(bib_file_txt = Path("res/MathOncoBibliograpy.bib")):
     print(f"Split {len(issues)} issues into {output_folder}")
 
 
-def split_single_bib_files_per_year(bib_file_txt = Path("res/MathOncoBibliograpy.bib")):
+def split_single_bib_files_per_year(bib_file_txt = Path("res/MathOncoBibliography.bib")):
     """
     Split a bib file into separate years
     """

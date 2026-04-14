@@ -8,7 +8,7 @@ from src.scraper import get_publications_from_issue, enrich_publications
 from pybtex.database import BibliographyData
 from pybtex.database import parse_string as bibtex_parse_string
 from unidecode import unidecode
-from src.postprocessing import clean_duplicates
+from src.utils import MATHONCO_BIB_FILE, get_parsed_bibliography
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,9 +21,13 @@ logging.info(f"version: {getattr(mathonco_feed, 'version', None)}")
 logging.info(f"bozo_exception: {getattr(mathonco_feed, 'bozo_exception', None)}")
 
 ### --- Read Latest Saved Issue Number --- ###
-with open("res/MathOncoBibliography.bib", "r") as f:
+with open(MATHONCO_BIB_FILE, "r") as f:
     latest_issue = f.readline().strip()
 latest_issue_number = int(latest_issue.split(" ")[-1])
+
+## --- Get parsed bibliography --- ###
+full_bib_content_parsed = get_parsed_bibliography()
+logging.info(f"Loaded {len(full_bib_content_parsed.entries)} entries from the bibliography.")
 
 ### --- Find new issues, if any --- ###
 new_issues = []
@@ -95,11 +99,17 @@ for issue in new_issues:
         first_word = first_word.lower()
                     
         # set label of the bibtex
-        parsed_bibtex = BibliographyData({
-            f"{first_author_surname}{year}{first_word}": bib_entry
-        })
+        bibtex_label = f"{first_author_surname}{year}{first_word}"
 
-        # add formatted bib
+        # check if already in the bibliography, if so, skip
+        if bibtex_label in full_bib_content_parsed.entries:
+            logging.warning(f"Entry {bibtex_label} already exists in the bibliography. Skipping.")
+            continue
+        
+        # else, add to the bibliography
+        parsed_bibtex = BibliographyData({
+            bibtex_label: bib_entry
+        })
         formatted_bib += parsed_bibtex.to_string('bibtex')
         formatted_bib += "\n"
 
@@ -110,12 +120,9 @@ for issue in new_issues:
         f.write(formatted_bib)
 
     # prepend complete file
-    with open("res/MathOncoBibliography.bib", "r") as f:
+    with open(MATHONCO_BIB_FILE, "r") as f:
         big_bib = f.read()
-    with open("res/MathOncoBibliography.bib", "w") as f:
+    with open(MATHONCO_BIB_FILE, "w") as f:
         f.write(formatted_bib)
         f.write(big_bib)
-
-# clean duplicates
-clean_duplicates()
 
