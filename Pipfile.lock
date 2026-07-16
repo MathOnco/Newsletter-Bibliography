@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b5d79e1a88d7065bae0ba1380a2362687f59c571a684119f87f3f2f4fb5c92ed"
+            "sha256": "145e53748c572b76958d698a3b22dd9593615a304dae4e1c48c66c1942a81e18"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -637,6 +637,15 @@
             ],
             "markers": "python_version >= '3.8'",
             "version": "==5.14.3"
+        },
+        "truststore": {
+            "hashes": [
+                "sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301",
+                "sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.10'",
+            "version": "==0.10.4"
         },
         "typing-extensions": {
             "hashes": [

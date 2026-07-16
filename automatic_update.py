@@ -1,6 +1,7 @@
 # This file automatically updates the bibliography with GitHub Actions
 import logging
 import requests
+import truststore
 import feedparser
 from bs4 import BeautifulSoup
 import pybtex.scanner
@@ -11,6 +12,13 @@ from unidecode import unidecode
 from src.utils import MATHONCO_BIB_FILE, get_parsed_bibliography
 
 logging.basicConfig(level=logging.INFO)
+
+# Verify TLS certs against the OS trust store (macOS Keychain / Windows cert
+# store / OpenSSL default on Linux) instead of certifi's bundled roots. On
+# machines behind a TLS-intercepting proxy (e.g. Netskope), the interception
+# cert is trusted at the OS level but not by certifi, which breaks urllib's
+# default verification.
+truststore.inject_into_ssl()
 
 ### --- Initialize Feed --- ###
 mathonco_feed = feedparser.parse("https://thisweekmathonco.substack.com/feed")
@@ -105,11 +113,12 @@ for issue in new_issues:
         if bibtex_label in full_bib_content_parsed.entries:
             logging.warning(f"Entry {bibtex_label} already exists in the bibliography. Skipping.")
             continue
-        
+
         # else, add to the bibliography
         parsed_bibtex = BibliographyData({
             bibtex_label: bib_entry
         })
+        full_bib_content_parsed.add_entry(bibtex_label, bib_entry)
         formatted_bib += parsed_bibtex.to_string('bibtex')
         formatted_bib += "\n"
 

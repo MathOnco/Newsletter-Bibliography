@@ -237,6 +237,40 @@ def get_doi(title: str, crossref: Works = None) -> str:
             return None
     
 
+MONTH_MACROS = {
+    "jan": "jan", "january": "jan",
+    "feb": "feb", "february": "feb",
+    "mar": "mar", "march": "mar",
+    "apr": "apr", "april": "apr",
+    "may": "may",
+    "jun": "jun", "june": "jun",
+    "jul": "jul", "july": "jul",
+    "aug": "aug", "august": "aug",
+    "sep": "sep", "sept": "sep", "september": "sep",
+    "oct": "oct", "october": "oct",
+    "nov": "nov", "november": "nov",
+    "dec": "dec", "december": "dec",
+}
+
+
+def normalize_bibtex_month(bibtex: str) -> str:
+    """
+    Crossref sometimes returns the `month` field as an unquoted bareword
+    (e.g. `month=Apr`), which bibtex treats as a reference to a predefined
+    macro. Only the standard lowercase 3-letter abbreviations (jan..dec) are
+    valid macros, so full names like `June` cause an UndefinedMacro error.
+    Rewrite any recognized month name/abbreviation to the standard macro.
+    """
+    def replace(match):
+        word = match.group(2)
+        macro = MONTH_MACROS.get(word.lower())
+        if macro is None:
+            return match.group(0)
+        return f"{match.group(1)}{macro}{match.group(3)}"
+
+    return re.sub(r"(month\s*=\s*)([A-Za-z]+)(\s*[,}])", replace, bibtex, flags=re.IGNORECASE)
+
+
 def get_formatted_citation(doi: str, citation_format: str = "bibtex") -> str:
     """
     Given the DOI, get the citation formatted in the given style (see supported formats here: https://api.crossref.org/v1/styles).
@@ -248,6 +282,8 @@ def get_formatted_citation(doi: str, citation_format: str = "bibtex") -> str:
     else:
         current_doi = doi
     bibtex = cn.content_negotiation(ids=current_doi, format=citation_format)
+    if citation_format == "bibtex":
+        bibtex = normalize_bibtex_month(bibtex)
     return bibtex
 
 
